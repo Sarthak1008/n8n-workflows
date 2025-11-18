@@ -1,0 +1,239 @@
+{
+  "name": "My workflow 5",
+  "nodes": [
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "path": "eb9eb046-ef38-4bb4-996d-e72689a61f6f",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -448,
+        -188
+      ],
+      "id": "2a8c8c13-30d9-425f-914d-424201086f84",
+      "name": "Webhook",
+      "webhookId": "eb9eb046-ef38-4bb4-996d-e72689a61f6f"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d182e3c9-5a64-4cf0-bec8-e45d3d5d43eb",
+              "leftValue": "={{ $json.query['hub.mode'] }}",
+              "rightValue": "=subscribe",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "b847923d-da08-474a-9e92-2d9829fb6c82",
+              "leftValue": "={{ $json.query['hub.verify_token'] }}",
+              "rightValue": "fb_chat_bot_n8n",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        -336
+      ],
+      "id": "efe1acef-a15d-45f9-8b48-c224ac270ec0",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.challenge'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        128,
+        -336
+      ],
+      "id": "b3550e85-d6fa-4ee5-80ce-1d9e01a54b5e",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "options": {
+          "systemMessage": "You are a professional customer support assistant. "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -224,
+        -40
+      ],
+      "id": "c79caef6-b628-44bb-a36f-1df6631b8baa",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "chatgpt-4o-latest"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -216,
+        184
+      ],
+      "id": "0c8ef72c-89f1-4a3e-b91e-174c22480a58",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "isWq9efeoyl1LpwC",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v24.0/907081205816484/messages?access_token=EAALwHaUJEsgBP26OONduYlssAp0zHcP0OYQBFDGbT5biFkip0I4zMcPgsK6Sv8zSa3TjfSEradD94Fj0yW3Rj06QjLIkmWB7tqlv6gX7yrJCyfIInXcFFaxtAUKlDKaCOXZBZA1ZA037rVZCcUYZCak65MlnwylbeXxFxGgdgM9rtlVDdetvCb1pU6kyokgZCCZBJFvUQ4vBAZDZD",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"recipient\": {\n    \"id\": \"25608322502137243\"\n  },\n  \"messaging_type\": \"RESPONSE\",\n  \"message\": {\n    \"text\": \"Hello! It looks like your message didn’t come through. How can I help you today? 😊\"\n  }\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        128,
+        -40
+      ],
+      "id": "45a448a4-f0b5-4bff-b296-ecc6cb1d4287",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.body.entry[0].messaging[0].sender.id }}",
+        "contextWindowLength": "={{ 5 }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -88,
+        184
+      ],
+      "id": "e8ef8079-1046-4266-a3ee-1b1ea1c9a5b6",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "966bb1a7-8f89-47f8-bfbc-eb710390ee3b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "df2d53c2d593db6065c36e060e51bdae020c68f17fc4b2074f135c210f9ad6a5"
+  },
+  "id": "7CYpDeVPoGC7qfFY",
+  "tags": []
+}

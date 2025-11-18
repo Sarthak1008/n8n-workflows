@@ -1,0 +1,238 @@
+{
+  "name": "Job Search LinkedIn",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "87609c89-e971-40d1-af66-205139d2884f",
+              "name": "keywords",
+              "value": "[\"Java Developer, \"SpringBoot\"]",
+              "type": "string"
+            },
+            {
+              "id": "0f054847-71eb-4a8d-987f-64570cc5365d",
+              "name": "experience",
+              "value": "entry_level",
+              "type": "string"
+            },
+            {
+              "id": "5b190b3f-c018-4f51-8e74-a9acd46ef401",
+              "name": "posted",
+              "value": "past_24_hours",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "fe465143-b74e-4984-a719-c816a80a32b4",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function node code\nreturn items.map(item => {\n  const data = item.json;\n\n  let applyUrl = null;\n\n  // 1. Check external_apply_url\n  if (data.external_apply_url && typeof data.external_apply_url === 'string') {\n    applyUrl = data.external_apply_url.includes('?http')\n      ? data.external_apply_url.split('?')[1] // clean Citi job URL\n      : data.external_apply_url;\n  } \n  // 2. If null, fallback\n  else {\n    if (data.directapply === true) {\n      // LinkedIn Easy Apply (specific job link if you have job ID in your data)\n      applyUrl = `https://www.linkedin.com/jobs/view/${data.job_id || ''}`;\n    } else {\n      // Fallback to company jobs page on LinkedIn\n      applyUrl = `https://www.linkedin.com/company/${data.linkedin_org_slug || ''}/jobs`;\n    }\n  }\n\n  return {\n    json: {\n      companyName: data.linkedin_org_slug || \"Unknown\",\n      description: data.linkedin_org_description || \"\",\n      seniority: data.seniority || \"Not specified\",\n      isRecruitmentAgency: data.linkedin_org_recruitment_agency_derived || false,\n      applyUrl: applyUrl\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "dfb5733e-176d-473e-81bd-c6fa54b4ecdd",
+      "name": "Function1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Collect all input items (jobs)\nconst items = $input.all();\n\n// Build one email subject + body\nreturn [\n  {\n    json: {\n      subject: `Job Opportunities (${items.length} found)`,\n      body: `\n        <h2>Here are the latest job opportunities</h2>\n        <table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse: collapse; width: 100%;\">\n          <tr style=\"background-color: #f2f2f2;\">\n            <th>Company</th>\n            <th>Seniority</th>\n            <th>Description</th>\n            <th>Apply Link</th>\n          </tr>\n          ${items.map(item => `\n            <tr>\n              <td>${item.json.companyName}</td>\n              <td>${item.json.seniority}</td>\n              <td>${item.json.description ? item.json.description.substring(0, 120) + \"...\" : \"N/A\"}</td>\n              <td><a href=\"${item.json.applyUrl}\">Apply Here</a></td>\n            </tr>\n          `).join(\"\")}\n        </table>\n      `\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ],
+      "id": "3e622b71-4308-4155-8ee2-aaeb5930ad87",
+      "name": "Function2"
+    },
+    {
+      "parameters": {
+        "fromEmail": "sarthak10082001@gmail.com",
+        "toEmail": "sarthak10082001@gmail.com",
+        "subject": "={{$json[\"subject\"]}}",
+        "html": "={{$json[\"body\"]}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1104,
+        0
+      ],
+      "id": "6c105842-c0f5-4b32-957b-ebe726295ac2",
+      "name": "Send email",
+      "webhookId": "06fdbcc6-ccac-46c3-805f-9a9677cd8792",
+      "credentials": {
+        "smtp": {
+          "id": "f4u6gKpU9jPPYKLK",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://linkedin-job-search-api.p.rapidapi.com/active-jb-24h",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "30"
+            },
+            {
+              "name": "offset",
+              "value": "0"
+            },
+            {
+              "name": "title_filter",
+              "value": "\"Java Developer\""
+            },
+            {
+              "name": "location_filter",
+              "value": "\"India\""
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "linkedin-job-search-api.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "94cacef86fmsh462f08254caccf5p12587cjsnb56c266776b3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "1d582275-e7cd-4c42-81d4-a77a856f8f6c",
+      "name": "Fetch Jobs LinkedIn"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 20,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        0
+      ],
+      "id": "b06adceb-6e7c-4c72-803c-efe3814ea7a4",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {
+    "Edit Fields": [
+      {
+        "json": {
+          "keywords": "[\"Java Developer, \"SpringBoot\"]",
+          "experience": "entry_level",
+          "posted": "past_24_hours"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Fetch Jobs LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function1": {
+      "main": [
+        [
+          {
+            "node": "Function2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function2": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Jobs LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Function1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5ea21b05-7e79-4c96-bdb7-0ca0c3c04664",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "16444c099f3459ab7f16a12f83f28968bccd436f3ae2894ff9a6179e9ff77544"
+  },
+  "id": "K0R9iltOBRksXOi6",
+  "tags": []
+}
