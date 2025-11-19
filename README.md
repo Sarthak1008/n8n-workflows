@@ -3,9 +3,8 @@ Automation workflows built using **n8n**, including LinkedIn job search automati
 
 ---
 
-## 🚀 Workflows Included
+![Workflow Diagram](https://raw.githubusercontent.com/Sarthak1008/n8n-workflows/main/n8n%20Triggers.png)
 
----
 
 ## 1️⃣ LinkedIn Job Search Automation  
 Automatically fetches job listings from LinkedIn every day and emails you a formatted HTML report.
